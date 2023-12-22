@@ -1,10 +1,12 @@
 const path = require('node:path')
-const { app, BrowserWindow, Menu, screen, ipcMain } = require('electron')
+const { app, BrowserWindow, Menu, screen, ipcMain, dialog } = require('electron')
+const axios = require('axios').default
 
 let mainWindow
 const cwd = process.cwd()
 const dev = process.env.NODE_ENV === 'development'
 const preloadUrl = path.resolve(cwd, './preload.js')
+let intervalId
 
 function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
@@ -14,7 +16,7 @@ function createWindow() {
     height,
     webPreferences: { devTools: dev, preload: preloadUrl },
   })
-
+  handleLogin(mainWindow)
   ipcMain.on('set-title', (event, title) => {
     const webContents = event.sender
     const win = BrowserWindow.fromWebContents(webContents)
@@ -40,11 +42,42 @@ function createWindow() {
   console.log(totalWidth, maxHeight)
   // 设置窗口的位置和大小，使其跨越多个屏幕
   // mainWindow.setBounds({ x: 0, y: 0, width: totalWidth, height: maxHeight })
-  mainWindow.setBounds({ x: 0, y: 0, width: 900, height: 600 })
+  mainWindow.setBounds({ x: 0, y: 0, width: 1200, height: 600 })
   //   mainWindow.setFullScreen(dev)
   if (dev) mainWindow.webContents.openDevTools()
 }
+
+async function handleFileOpen() {
+  const { canceled, filePaths } = await dialog.showOpenDialog()
+  if (!canceled) return filePaths[0]
+}
+
+function handleConfirmTolenReceived() {
+  intervalId && clearInterval(intervalId)
+  console.log('clear intervalId')
+}
+/**
+ * 向渲染进程发送token，需要确保渲染进程收到
+ * @param {import('electron').BrowserWindow} win
+ */
+function handleLogin(win) {
+  axios
+    .post('http://localhost:3000/api/auth/login', { phone: '18123845936', password: '5936' })
+    .then((res) => {
+      if (res.status === 200) {
+        const token = res.headers['x-refresh-token']
+        intervalId && clearInterval(intervalId)
+        intervalId = setInterval(() => {
+          console.log('send intervalId')
+          win.webContents.send('update-token', token)
+        }, 1000)
+      }
+    })
+    .catch(console.error)
+}
 app.whenReady().then(() => {
+  ipcMain.handle('dialog:openFile', handleFileOpen)
+  ipcMain.handle('confirm-token', handleConfirmTolenReceived)
   createWindow()
 
   app.on('activate', () => {
