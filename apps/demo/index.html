@@ -8,7 +8,13 @@
 </head>
 
 <body>
-    111
+    Renderer Process
 </body>
+<script>
+    console.log(window.electronAPI)
+    window.onload = () => {
+        window.electronAPI.setTitle('test-title')
+    }
+</script>
 
 </html>
