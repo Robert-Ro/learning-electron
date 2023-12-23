@@ -1,0 +1,13 @@
+directories:
+  output: build
+appId: com.ecar.remote-drive.video
+productName: 远程驾驶
+artifactName: '${productName}-${version}-${platform}-video.${ext}'
+mac:
+  icon: app-icons/icon.icns
+  target: dmg
+  category: public.app-category.productivity
+win:
+  icon: build/icons/win/icon.ico
+  target: nsis
+  publisherName: 易咖智车

@@ -1,0 +1,5 @@
+productName: 远程驾驶-Sit
+artifactName: '${productName}-${version}-${platform}-video-sit.${ext}'
+extends: electron-builder.yml
+win:
+  publisherName: 易咖智车-Sit
